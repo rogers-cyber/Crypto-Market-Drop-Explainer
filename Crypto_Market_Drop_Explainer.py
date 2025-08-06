@@ -1,13 +1,11 @@
 import streamlit as st
 from gtts import gTTS
-from moviepy.editor import *
 import os
-from datetime import datetime
 
-# Title of the app
-st.title("🚨 Crypto Market Crash (Aug 4–6, 2025) Explainer Video")
+# Title
+st.title("🚨 Crypto Market Crash (Aug 4–6, 2025) Explainer")
 
-# Original script content (broken into segments for narration + scenes)
+# Scenes (text + narration)
 scenes = [
     "🚨 Why Crypto Just Dropped (Aug 4–6, 2025) — and Why So Many Traders Lost 🚨",
     "The crypto market saw a sharp dip this week — and if you’re wondering why your gains vanished, this is for you.",
@@ -22,40 +20,19 @@ scenes = [
     "💬 Did you get caught or trade it right? Share your lessons below!"
 ]
 
-# Function to convert a text scene into a TTS audio clip
-def generate_tts_clip(text, index):
-    tts = gTTS(text, lang='en')
-    filename = f"tts_clip_{index}.mp3"
+# Show each scene with audio
+for i, scene in enumerate(scenes):
+    st.markdown(f"### Slide {i+1}")
+    st.write(scene)
+
+    # Generate TTS
+    tts = gTTS(text=scene, lang='en')
+    filename = f"scene_{i}.mp3"
     tts.save(filename)
-    return filename
 
-# Generate video from scenes and narration
-def generate_video(scenes):
-    clips = []
-    for i, scene in enumerate(scenes):
-        audio_file = generate_tts_clip(scene, i)
-        audioclip = AudioFileClip(audio_file)
-        duration = audioclip.duration
+    # Display audio player
+    with open(filename, "rb") as audio_file:
+        st.audio(audio_file.read(), format="audio/mp3")
 
-        txt_clip = TextClip(scene, fontsize=40, color='white', size=(1080, 720), method='caption', align='center')
-        txt_clip = txt_clip.set_duration(duration).set_position('center').set_audio(audioclip)
-        clips.append(txt_clip)
-
-    final_video = concatenate_videoclips(clips, method="compose")
-    output_path = f"crypto_drop_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
-    final_video.write_videofile(output_path, fps=24)
-
-    # Cleanup temp audio files
-    for i in range(len(scenes)):
-        os.remove(f"tts_clip_{i}.mp3")
-
-    return output_path
-
-# Generate video button
-if st.button("🎬 Generate Explainer Video"):
-    with st.spinner("Generating video... this may take a minute ⏳"):
-        video_file = generate_video(scenes)
-        st.success("✅ Video generated!")
-
-        # Display video
-        st.video(video_file)
+    # Clean up (optional in dev mode; Streamlit Cloud handles temp files)
+    os.remove(filename)
